@@ -1,32 +1,28 @@
 import java.awt.EventQueue;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.BoxLayout;
-import javax.swing.JList;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
+import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.Font;
-import javax.swing.JRadioButton;
-import javax.swing.JLabel;
-import javax.swing.JTextField;
-import javax.swing.JTextPane;
 import javax.swing.border.LineBorder;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 import java.awt.Color;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.security.spec.RSAOtherPrimeInfo;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.function.ToDoubleBiFunction;
 
 public class Main {
 
     private JFrame frame;
     private JTextField textField;
+    boolean merging;
+    boolean substracting;
+    String newModsetFileName;
 
     /**
      * Launch the application.
@@ -79,15 +75,31 @@ public class Main {
         panel.add(txtpnModsetB);
 
 
-        JRadioButton rdbtnNewRadioButton = new JRadioButton("Merge\r\n");
-        rdbtnNewRadioButton.setFont(new Font("Tahoma", Font.BOLD, 12));
-        rdbtnNewRadioButton.setBounds(20, 39, 149, 23);
-        panel.add(rdbtnNewRadioButton);
+        JRadioButton rdbtnMerge = new JRadioButton("Merge\r\n");
+        rdbtnMerge.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                merging = true;
+            }
+        });
+        rdbtnMerge.setFont(new Font("Tahoma", Font.BOLD, 12));
+        rdbtnMerge.setBounds(20, 39, 149, 23);
+        panel.add(rdbtnMerge);
 
         JRadioButton rdbtnSubstract = new JRadioButton("Substract");
+        rdbtnSubstract.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                substracting = true;
+            }
+        });
         rdbtnSubstract.setFont(new Font("Tahoma", Font.BOLD, 12));
         rdbtnSubstract.setBounds(20, 64, 149, 23);
         panel.add(rdbtnSubstract);
+
+        ButtonGroup group = new ButtonGroup();
+        group.add(rdbtnMerge);
+        group.add(rdbtnSubstract);
 
         JLabel lblNewLabel = new JLabel("Select mode");
         lblNewLabel.setFont(new Font("Tahoma", Font.BOLD, 12));
@@ -125,8 +137,9 @@ public class Main {
                                         System.out.println("READ INSIDE THE IF: " + tempScan);
                                         modaFileBody.add(tempScan);
                                     } else {
-                                        System.out.println("READ INSIDE THE IF: " + scan.nextLine());
-                                        modaFileBody.add(scan.nextLine());
+                                        String tempScan2 = scan.nextLine();
+                                        System.out.println("READ INSIDE THE IF: " + tempScan2);
+                                        modaFileBody.add(tempScan2);
                                     }
                                 }
                             }
@@ -135,6 +148,10 @@ public class Main {
                         ex.printStackTrace();
                     }
                     modaFileBody.forEach(System.out::println);
+                    //ToDo: Znalezc sposob na znajdowanie duplikatow, zapisywanie w pliku tylko elementow ktore sie nie powtarzaja
+                    //ToDo: Moze dobrze byloby stworzyc
+
+                    System.out.println("CZY ZAWIERA ?" + modaFileBody.contains("A3 Thermal Improvement"));
                 }
             }
         });
@@ -191,8 +208,59 @@ public class Main {
         btnNewButton.setFont(new Font("Tahoma", Font.BOLD, 12));
         btnNewButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                newModsetFileName = textField.getText();
+                if (newModsetFileName.equals("")) {
+                    newModsetFileName = "DefaultModFile";
+                }
+                System.out.println(newModsetFileName);
+
                 JFileChooser modNew = new JFileChooser();
-                modNew.showSaveDialog(null);
+                int saveResult = modNew.showSaveDialog(null);
+                if (saveResult == JFileChooser.APPROVE_OPTION) {
+                    String newFilePath = modNew.getSelectedFile().getAbsolutePath();
+                    System.out.println(saveResult);
+                    System.out.println(newFilePath);
+                    if (newFilePath.contains(".txt") || newFilePath.contains(".html")) {
+                        if (merging) {
+                            List<String> newModFileBody = new LinkedList<>();
+                            String tempLine;
+                            File templateFile = new File("D:\\Programowanie\\Java\\Arma\\resources\\template.txt");
+                            try {
+                                Scanner tmpScan = new Scanner(templateFile);
+                                FileWriter newModFile = new FileWriter(modNew.getSelectedFile().getAbsolutePath());
+                                while (tmpScan.hasNext()) {
+                                    tempLine = tmpScan.nextLine();
+                                    if (tempLine.contains("<table>")) {
+                                        System.out.println("HERE");
+                                        newModFile.write(tempLine + "\n");
+                                        for (int i = 0; i < modaFileBody.size(); i++) {
+                                            newModFile.write(modaFileBody.get(i) + "\n");
+                                        }
+                                    } else {
+                                        newModFileBody.add(tempLine);
+                                        newModFile.write(tempLine + "\n");
+                                    }
+                                    //newModFileBody.add(tempLine);
+                                    //newModFile.write(tempLine + "\n");
+                                }
+                                newModFile.close();
+                                newModFileBody.forEach(System.out::println);
+                            } catch (FileNotFoundException ex) {
+                                ex.printStackTrace();
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                            }
+                        } else if (substracting) {
+                            System.out.println("TEST MERGING FALSE!");
+                        } else {
+                            System.out.println("You have not selected what option you want to pick!" +
+                                    "\nPlease select \"merge\" or \"substract\" option and try again.");
+                        }
+                    } else {
+                        System.out.println("To export Mod file You need to save file with .html or .txt file extension!" +
+                                "\nTry to export Mod file again!");
+                    }
+                }
             }
         });
 
