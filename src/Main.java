@@ -53,6 +53,7 @@ public class Main {
     private void initialize() {
         List<String> modaFileBody = new LinkedList<>();
         List<String> modbFileBody = new LinkedList<>();
+        List<String> modNames = new LinkedList<>();
         frame = new JFrame();
         frame.setBounds(100, 100, 886, 519);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -123,6 +124,7 @@ public class Main {
                 JFileChooser modA = new JFileChooser();
                 int openResult = modA.showOpenDialog(null);
                 if (openResult == JFileChooser.APPROVE_OPTION) {
+                    modaFileBody.clear();
                     txtpnModsetA.setText(modA.getSelectedFile().getAbsolutePath());
                     File modaFile = new File(modA.getSelectedFile().getAbsolutePath());
                     System.out.println(modaFile);
@@ -131,27 +133,15 @@ public class Main {
                         String tempScan;
                         while (scan.hasNext()) {
                             tempScan = scan.nextLine();
-                            if (tempScan.contains("<tr data-type=\"ModContainer\">")) {
-                                for (int i = 0; i <= 8; i++) {
-                                    if (i == 0) {
-                                        System.out.println("READ INSIDE THE IF: " + tempScan);
-                                        modaFileBody.add(tempScan);
-                                    } else {
-                                        String tempScan2 = scan.nextLine();
-                                        System.out.println("READ INSIDE THE IF: " + tempScan2);
-                                        modaFileBody.add(tempScan2);
-                                    }
-                                }
+                            if (tempScan.contains("<td data-type=\"DisplayName\">") || tempScan.contains("<a href=")) {
+                                System.out.println(tempScan);
+                                modaFileBody.add(tempScan);
                             }
                         }
                     } catch (FileNotFoundException ex) {
                         ex.printStackTrace();
                     }
                     modaFileBody.forEach(System.out::println);
-                    //ToDo: Znalezc sposob na znajdowanie duplikatow, zapisywanie w pliku tylko elementow ktore sie nie powtarzaja
-                    //ToDo: Moze dobrze byloby stworzyc
-
-                    System.out.println("CZY ZAWIERA ?" + modaFileBody.contains("A3 Thermal Improvement"));
                 }
             }
         });
@@ -163,11 +153,10 @@ public class Main {
         JButton btnNewButton_1_1 = new JButton("Import Modset B\r\n");
         btnNewButton_1_1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                //modB.showSaveDialog(null);
-                //txtpnModsetB.setText(modB.getSelectedFile().getAbsolutePath());
                 JFileChooser modB = new JFileChooser();
                 int openResult = modB.showOpenDialog(null);
                 if (openResult == JFileChooser.APPROVE_OPTION) {
+                    modbFileBody.clear();
                     txtpnModsetB.setText(modB.getSelectedFile().getAbsolutePath());
                     File modaFile = new File(modB.getSelectedFile().getAbsolutePath());
                     System.out.println(modaFile);
@@ -176,17 +165,9 @@ public class Main {
                         String tempScan;
                         while (scan.hasNext()) {
                             tempScan = scan.nextLine();
-                            if (tempScan.contains("<tr data-type=\"ModContainer\">")) {
-                                for (int i = 0; i <= 8; i++) {
-                                    if (i == 0) {
-                                        System.out.println("READ INSIDE THE IF: " + tempScan);
-                                        modbFileBody.add(tempScan);
-                                    } else {
-                                        String tempScan2 = scan.nextLine();
-                                        System.out.println("READ INSIDE THE IF: " + tempScan2);
-                                        modbFileBody.add(tempScan2);
-                                    }
-                                }
+                            if (tempScan.contains("<td data-type=\"DisplayName\">") || tempScan.contains("<a href=")) {
+                                System.out.println(tempScan);
+                                modbFileBody.add(tempScan);
                             }
                         }
                     } catch (FileNotFoundException ex) {
@@ -216,7 +197,12 @@ public class Main {
 
                 JFileChooser modNew = new JFileChooser();
                 int saveResult = modNew.showSaveDialog(null);
-                if (saveResult == JFileChooser.APPROVE_OPTION) {
+                exit_method: if (saveResult == JFileChooser.APPROVE_OPTION) {
+                    if (modaFileBody.isEmpty() || modbFileBody.isEmpty()) {
+                        System.out.println("To create a new Mod file you have to specify two Mod files" +
+                                " - Mod A and Mod B!");
+                        break exit_method;
+                    }
                     String newFilePath = modNew.getSelectedFile().getAbsolutePath();
                     System.out.println(saveResult);
                     System.out.println(newFilePath);
@@ -231,27 +217,71 @@ public class Main {
                                 while (tmpScan.hasNext()) {
                                     tempLine = tmpScan.nextLine();
                                     if (tempLine.contains("<table>")) {
-                                        System.out.println("HERE");
                                         newModFile.write(tempLine + "\n");
                                         for (int i = 0; i < modaFileBody.size(); i++) {
-                                            newModFile.write(modaFileBody.get(i) + "\n");
+                                            i = modBodyPrinter(modaFileBody, newModFile, tempLine, i);
+                                        }
+                                        for (int i = 0; i < modbFileBody.size(); i++) {
+                                            if (modaFileBody.contains(modbFileBody.get(i))) {
+                                                System.out.println("Removing duplicate: " + modaFileBody.get(i).
+                                                        substring(36, modaFileBody.get(i).length() - 5));
+                                                i += 1;
+                                            } else {
+                                                i = modBodyPrinter(modbFileBody, newModFile, tempLine, i);
+                                            }
                                         }
                                     } else {
-                                        newModFileBody.add(tempLine);
                                         newModFile.write(tempLine + "\n");
                                     }
-                                    //newModFileBody.add(tempLine);
-                                    //newModFile.write(tempLine + "\n");
                                 }
                                 newModFile.close();
-                                newModFileBody.forEach(System.out::println);
                             } catch (FileNotFoundException ex) {
                                 ex.printStackTrace();
                             } catch (IOException ex) {
                                 ex.printStackTrace();
                             }
                         } else if (substracting) {
+                            List<String> newModFileBody = new LinkedList<>();
+                            String tempLine;
+                            File templateFile = new File("D:\\Programowanie\\Java\\Arma\\resources\\template.txt");
+                            try {
+                                Scanner tmpScan = new Scanner(templateFile);
+                                FileWriter newModFile = new FileWriter(modNew.getSelectedFile().getAbsolutePath());
+                                while (tmpScan.hasNext()) {
+                                    tempLine = tmpScan.nextLine();
+                                    if (tempLine.contains("<table>")) {
+                                        newModFile.write(tempLine + "\n");
+                                        for (int i = 0; i < modbFileBody.size(); i++) {
+                                            if (modaFileBody.contains(modbFileBody.get(i))) {
+                                                i = modBodyPrinter(modbFileBody, newModFile, tempLine, i);
+                                            } else {
+                                                System.out.println("Removing not matching Mod: " + modaFileBody.get(i).
+                                                        substring(38, modaFileBody.get(i).length() - 5));
+                                                i += 1;
+                                            }
+                                            /*for (int j = 0; i < modaFileBody.size(); j++) {
+                                                j = modBodyPrinter(modaFileBody, newModFile, tempLine, j);
+                                                if (modaFileBody.contains(modbFileBody.get(i))) {
+                                                    i = modBodyPrinter(modbFileBody, newModFile, tempLine, i);
+                                                } else {
+                                                    System.out.println("Removing duplicate: " + modaFileBody.get(i).
+                                                            substring(36, modaFileBody.get(i).length() - 5));
+                                                    i += 1;
+                                                }
+                                            }*/
+                                        }
+                                    } else {
+                                        newModFile.write(tempLine + "\n");
+                                    }
+                                }
+                                newModFile.close();
+                            } catch (FileNotFoundException ex) {
+                                ex.printStackTrace();
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                            }
                             System.out.println("TEST MERGING FALSE!");
+
                         } else {
                             System.out.println("You have not selected what option you want to pick!" +
                                     "\nPlease select \"merge\" or \"substract\" option and try again.");
@@ -260,6 +290,8 @@ public class Main {
                         System.out.println("To export Mod file You need to save file with .html or .txt file extension!" +
                                 "\nTry to export Mod file again!");
                     }
+                } else {
+                    System.out.println("Directory hasn't been choosen!! File hasn't been created!");
                 }
             }
         });
@@ -277,5 +309,18 @@ public class Main {
         lblNewLabel_1.setFont(new Font("Tahoma", Font.BOLD, 12));
         lblNewLabel_1.setBounds(178, 10, 82, 35);
         panel_1.add(lblNewLabel_1);
+    }
+
+    private int modBodyPrinter(List<String> modAorBBody, FileWriter newModFile, String tempLine, int i) throws IOException {
+        newModFile.write("        <tr data-type=\"ModContainer\">");
+        newModFile.write(modAorBBody.get(i++) + "\n");
+        newModFile.write("          <td>");
+        newModFile.write("            <span class=\"from-steam\">Steam</span>");
+        newModFile.write("          </td>");
+        newModFile.write("           <td>");
+        newModFile.write(modAorBBody.get(i) + "\n");
+        newModFile.write("          </td>");
+        newModFile.write("        </tr>");
+        return i;
     }
 }
