@@ -223,9 +223,8 @@ public class Main {
                                         }
                                         for (int i = 0; i < modbFileBody.size(); i++) {
                                             if (modaFileBody.contains(modbFileBody.get(i))) {
-                                                System.out.println("Removing duplicate: " + modaFileBody.get(i).
-                                                        substring(36, modaFileBody.get(i).length() - 5));
-                                                i += 1;
+                                                System.out.println("Removing duplicate: " + modbFileBody.get(i).
+                                                        substring(38, modbFileBody.get(i++).length() - 5));
                                             } else {
                                                 i = modBodyPrinter(modbFileBody, newModFile, tempLine, i);
                                             }
@@ -251,24 +250,14 @@ public class Main {
                                     tempLine = tmpScan.nextLine();
                                     if (tempLine.contains("<table>")) {
                                         newModFile.write(tempLine + "\n");
-                                        for (int i = 0; i < modbFileBody.size(); i++) {
-                                            if (modaFileBody.contains(modbFileBody.get(i))) {
-                                                i = modBodyPrinter(modbFileBody, newModFile, tempLine, i);
+                                        for (int i = 0; i < modaFileBody.size(); i++) {
+                                            if (modbFileBody.contains(modaFileBody.get(i))) {
+                                                System.out.println("Removing Mod B file: " + modaFileBody.get(i).
+                                                        substring(38, modaFileBody.get(i++).length() - 5));
+                                                //i++;
                                             } else {
-                                                System.out.println("Removing not matching Mod: " + modaFileBody.get(i).
-                                                        substring(38, modaFileBody.get(i).length() - 5));
-                                                i += 1;
+                                                i = modBodyPrinter(modaFileBody, newModFile, tempLine, i);
                                             }
-                                            /*for (int j = 0; i < modaFileBody.size(); j++) {
-                                                j = modBodyPrinter(modaFileBody, newModFile, tempLine, j);
-                                                if (modaFileBody.contains(modbFileBody.get(i))) {
-                                                    i = modBodyPrinter(modbFileBody, newModFile, tempLine, i);
-                                                } else {
-                                                    System.out.println("Removing duplicate: " + modaFileBody.get(i).
-                                                            substring(36, modaFileBody.get(i).length() - 5));
-                                                    i += 1;
-                                                }
-                                            }*/
                                         }
                                     } else {
                                         newModFile.write(tempLine + "\n");
