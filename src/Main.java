@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
@@ -23,6 +25,7 @@ public class Main {
     boolean merging;
     boolean substracting;
     String newModsetFileName;
+    boolean fillList = false;
 
     /**
      * Launch the application.
@@ -54,6 +57,7 @@ public class Main {
         List<String> modaFileBody = new LinkedList<>();
         List<String> modbFileBody = new LinkedList<>();
         List<String> modNames = new LinkedList<>();
+        String newModFileName = "New Mod";
         frame = new JFrame();
         frame.setBounds(100, 100, 886, 519);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -80,6 +84,7 @@ public class Main {
         rdbtnMerge.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                substracting = false;
                 merging = true;
             }
         });
@@ -91,6 +96,7 @@ public class Main {
         rdbtnSubstract.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                merging = false;
                 substracting = true;
             }
         });
@@ -121,28 +127,7 @@ public class Main {
         JButton btnNewButton_1 = new JButton("Import Modset A");
         btnNewButton_1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                JFileChooser modA = new JFileChooser();
-                int openResult = modA.showOpenDialog(null);
-                if (openResult == JFileChooser.APPROVE_OPTION) {
-                    modaFileBody.clear();
-                    txtpnModsetA.setText(modA.getSelectedFile().getAbsolutePath());
-                    File modaFile = new File(modA.getSelectedFile().getAbsolutePath());
-                    System.out.println(modaFile);
-                    try {
-                        Scanner scan = new Scanner(modaFile);
-                        String tempScan;
-                        while (scan.hasNext()) {
-                            tempScan = scan.nextLine();
-                            if (tempScan.contains("<td data-type=\"DisplayName\">") || tempScan.contains("<a href=")) {
-                                System.out.println(tempScan);
-                                modaFileBody.add(tempScan);
-                            }
-                        }
-                    } catch (FileNotFoundException ex) {
-                        ex.printStackTrace();
-                    }
-                    modaFileBody.forEach(System.out::println);
-                }
+                modImport(modaFileBody, txtpnModsetA);
             }
         });
         btnNewButton_1.setFont(new Font("Tahoma", Font.BOLD, 12));
@@ -153,28 +138,7 @@ public class Main {
         JButton btnNewButton_1_1 = new JButton("Import Modset B\r\n");
         btnNewButton_1_1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                JFileChooser modB = new JFileChooser();
-                int openResult = modB.showOpenDialog(null);
-                if (openResult == JFileChooser.APPROVE_OPTION) {
-                    modbFileBody.clear();
-                    txtpnModsetB.setText(modB.getSelectedFile().getAbsolutePath());
-                    File modaFile = new File(modB.getSelectedFile().getAbsolutePath());
-                    System.out.println(modaFile);
-                    try {
-                        Scanner scan = new Scanner(modaFile);
-                        String tempScan;
-                        while (scan.hasNext()) {
-                            tempScan = scan.nextLine();
-                            if (tempScan.contains("<td data-type=\"DisplayName\">") || tempScan.contains("<a href=")) {
-                                System.out.println(tempScan);
-                                modbFileBody.add(tempScan);
-                            }
-                        }
-                    } catch (FileNotFoundException ex) {
-                        ex.printStackTrace();
-                    }
-                    modbFileBody.forEach(System.out::println);
-                }
+                modImport(modbFileBody, txtpnModsetB);
             }
         });
         btnNewButton_1_1.setFont(new Font("Tahoma", Font.BOLD, 12));
@@ -190,11 +154,12 @@ public class Main {
         btnNewButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 newModsetFileName = textField.getText();
+                fillList = true;
                 if (newModsetFileName.equals("")) {
                     newModsetFileName = "DefaultModFile";
                 }
-                System.out.println(newModsetFileName);
-
+                //newModFileName = newModsetFileName;
+                System.out.println("Creating a new Mod File...");
                 JFileChooser modNew = new JFileChooser();
                 int saveResult = modNew.showSaveDialog(null);
                 exit_method: if (saveResult == JFileChooser.APPROVE_OPTION) {
@@ -210,7 +175,7 @@ public class Main {
                         if (merging) {
                             List<String> newModFileBody = new LinkedList<>();
                             String tempLine;
-                            File templateFile = new File("D:\\Programowanie\\Java\\Arma\\resources\\template.txt");
+                            File templateFile = new File("./resources/template.txt");
                             try {
                                 Scanner tmpScan = new Scanner(templateFile);
                                 FileWriter newModFile = new FileWriter(modNew.getSelectedFile().getAbsolutePath());
@@ -231,6 +196,7 @@ public class Main {
                                         }
                                     } else {
                                         newModFile.write(tempLine + "\n");
+
                                     }
                                 }
                                 newModFile.close();
@@ -242,7 +208,7 @@ public class Main {
                         } else if (substracting) {
                             List<String> newModFileBody = new LinkedList<>();
                             String tempLine;
-                            File templateFile = new File("D:\\Programowanie\\Java\\Arma\\resources\\template.txt");
+                            File templateFile = new File("./resources/template.txt");
                             try {
                                 Scanner tmpScan = new Scanner(templateFile);
                                 FileWriter newModFile = new FileWriter(modNew.getSelectedFile().getAbsolutePath());
@@ -254,7 +220,6 @@ public class Main {
                                             if (modbFileBody.contains(modaFileBody.get(i))) {
                                                 System.out.println("Removing Mod B file: " + modaFileBody.get(i).
                                                         substring(38, modaFileBody.get(i++).length() - 5));
-                                                //i++;
                                             } else {
                                                 i = modBodyPrinter(modaFileBody, newModFile, tempLine, i);
                                             }
@@ -269,8 +234,6 @@ public class Main {
                             } catch (IOException ex) {
                                 ex.printStackTrace();
                             }
-                            System.out.println("TEST MERGING FALSE!");
-
                         } else {
                             System.out.println("You have not selected what option you want to pick!" +
                                     "\nPlease select \"merge\" or \"substract\" option and try again.");
@@ -289,14 +252,18 @@ public class Main {
         frame.getContentPane().add(panel_1);
         panel_1.setLayout(null);
 
+        DefaultListModel listModel = new DefaultListModel();
+
         JList list = new JList();
         list.setBorder(new LineBorder(new Color(0, 0, 0)));
         list.setBounds(10, 73, 411, 399);
         panel_1.add(list);
+        list.setModel(listModel);
 
-        JLabel lblNewLabel_1 = new JLabel("New Modlist");
+
+        JLabel lblNewLabel_1 = new JLabel(newModFileName + " body overview:");
         lblNewLabel_1.setFont(new Font("Tahoma", Font.BOLD, 12));
-        lblNewLabel_1.setBounds(178, 10, 82, 35);
+        lblNewLabel_1.setBounds(160, 10, 350, 35);
         panel_1.add(lblNewLabel_1);
     }
 
@@ -311,5 +278,31 @@ public class Main {
         newModFile.write("          </td>");
         newModFile.write("        </tr>");
         return i;
+    }
+
+    private void modImport(List<String> modFileBody, JTextPane txtpnModsetB) {
+        JFileChooser fromModFile = new JFileChooser();
+        int openResult = fromModFile.showOpenDialog(null);
+        if (openResult == JFileChooser.APPROVE_OPTION) {
+            modFileBody.clear();
+            txtpnModsetB.setText(fromModFile.getSelectedFile().getAbsolutePath());
+            File modaFile = new File(fromModFile.getSelectedFile().getAbsolutePath());
+            System.out.println(modaFile);
+            try {
+                Scanner scan = new Scanner(modaFile);
+                String tempScan;
+                while (scan.hasNext()) {
+                    tempScan = scan.nextLine();
+                    if (tempScan.contains("<td data-type=\"DisplayName\">") || tempScan.contains("<a href=")) {
+                        System.out.println(tempScan);
+                        modFileBody.add(tempScan);
+                    }
+                }
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+            }
+            System.out.println("Captured Mod body:");
+            modFileBody.forEach(System.out::println);
+        }
     }
 }
