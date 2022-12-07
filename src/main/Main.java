@@ -1,26 +1,12 @@
 package main;
 import java.awt.EventQueue;
-import javax.sound.midi.spi.SoundbankReader;
 import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.Font;
-import javax.swing.border.LineBorder;
-import javax.swing.event.AncestorEvent;
-import javax.swing.event.AncestorListener;
 import java.awt.Color;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URL;
-import java.sql.SQLOutput;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Scanner;
-import java.util.function.ToDoubleBiFunction;
 import java.awt.Toolkit;
 
 public class Main {
@@ -59,10 +45,8 @@ public class Main {
 	private void initialize(DataContainer dataContainer) {
 		List<String> modaFileBody = new LinkedList<>();
 		List<String> modbFileBody = new LinkedList<>();
-		List<String> modNames = new LinkedList<>();
-		String newModFileName = "New Mod";
 		preset = new JFrame();
-		preset.setIconImage(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("/main/FKYoutubePatch.png")));
+		preset.setIconImage(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("FKYoutubePatch.png")));
 		preset.setTitle("Arma Modset Editor");
 		preset.setResizable(false);
 		preset.setBounds(100, 100, 410, 455);

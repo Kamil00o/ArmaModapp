@@ -125,10 +125,6 @@ public class EventHandler implements ActionListener {
         }
     }
 
-    public void getInternalFields() {
-
-    }
-
     private int modBodyPrinter(List<String> modAorBBody, FileWriter newModFile, String tempLine, int i) throws IOException {
         newModFile.write("        <tr data-type=\"ModContainer\">");
         newModFile.write(modAorBBody.get(i++) + "\n");
