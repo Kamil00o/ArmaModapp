@@ -3,26 +3,40 @@ package main;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
-public class EventHandler extends Main implements ActionListener{
-    List<String> modaFileBody = new LinkedList<>();
-    List<String> modbFileBody = new LinkedList<>();
-    List<String> modNames = new LinkedList<>();
-    String newModFileName = "New Mod";
+public class EventHandler implements ActionListener {
+    List<String> modaFileBody;
+    List<String> modbFileBody;
+    JFrame preset;
+    boolean fillList;
+    JFormattedTextField newModfileName;
+    boolean merging;
+    boolean substracting;
+    DataContainer dataContainer;
+
+    public EventHandler(boolean fillList, JFormattedTextField newModfileName, JFrame preset, List<String> modaFileBody, List<String> modbFileBody, DataContainer dataContainer) {
+       this.preset = preset;
+       this.newModfileName = newModfileName;
+       this.dataContainer = dataContainer;
+       this.fillList = fillList;
+       this.modaFileBody = modaFileBody;
+       this.modbFileBody = modbFileBody;
+    }
 
     public void actionPerformed(ActionEvent event) {
+        this.substracting = dataContainer.getDataSubstracting();
+        this.merging = dataContainer.getDataMerge();
+
         fillList = true;
         System.out.println("Creating a new Mod File...");
         JFileChooser modNew = new JFileChooser();
         int saveResult = modNew.showSaveDialog(null);
-        exit_method: if (saveResult == JFileChooser.APPROVE_OPTION) {
+        exit_method:
+        if (saveResult == JFileChooser.APPROVE_OPTION) {
             if (modaFileBody.isEmpty() || modbFileBody.isEmpty()) {
                 JOptionPane.showMessageDialog(preset, "To create a new Mod file you have to specify two Mod files" +
                         " - Mod A and Mod B!");
@@ -33,7 +47,6 @@ public class EventHandler extends Main implements ActionListener{
             System.out.println(newFilePath);
             if (newFilePath.contains(".txt") || newFilePath.contains(".html")) {
                 if (merging) {
-                    List<String> newModFileBody = new LinkedList<>();
                     String tempLine;
                     InputStream templateInputStream = getClass().getResourceAsStream("template.txt");
                     try {
@@ -54,12 +67,10 @@ public class EventHandler extends Main implements ActionListener{
                                         i = modBodyPrinter(modbFileBody, newModFile, tempLine, i);
                                     }
                                 }
-                            }
-                            else if (tempLine.contains("<meta name=\"arma:PresetName\" content=\"\" />")) {
+                            } else if (tempLine.contains("<meta name=\"arma:PresetName\" content=\"\" />")) {
                                 System.out.println("New Modset name: " + newModfileName.getText());
                                 newModFile.write("<meta name=\"arma:PresetName\" content=\"" + newModfileName.getText() + "\" />" + "\n");
-                            }
-                            else {
+                            } else {
                                 newModFile.write(tempLine + "\n");
 
                             }
@@ -71,7 +82,6 @@ public class EventHandler extends Main implements ActionListener{
                         ex.printStackTrace();
                     }
                 } else if (substracting) {
-                    List<String> newModFileBody = new LinkedList<>();
                     String tempLine;
                     InputStream templateInputStream = getClass().getResourceAsStream("template.txt");
                     try {
@@ -89,12 +99,10 @@ public class EventHandler extends Main implements ActionListener{
                                         i = modBodyPrinter(modaFileBody, newModFile, tempLine, i);
                                     }
                                 }
-                            }
-                            else if (tempLine.contains("<meta name=\"arma:PresetName\" content=\"\" />")) {
-                                System.out.println("New Modset name: "+ newModfileName.getText());
+                            } else if (tempLine.contains("<meta name=\"arma:PresetName\" content=\"\" />")) {
+                                System.out.println("New Modset name: " + newModfileName.getText());
                                 newModFile.write("<meta name=\"arma:PresetName\" content=\"" + newModfileName.getText() + "\" />" + "\n");
-                            }
-                            else {
+                            } else {
                                 newModFile.write(tempLine + "\n");
                             }
                         }
@@ -119,5 +127,18 @@ public class EventHandler extends Main implements ActionListener{
 
     public void getInternalFields() {
 
+    }
+
+    private int modBodyPrinter(List<String> modAorBBody, FileWriter newModFile, String tempLine, int i) throws IOException {
+        newModFile.write("        <tr data-type=\"ModContainer\">");
+        newModFile.write(modAorBBody.get(i++) + "\n");
+        newModFile.write("          <td>");
+        newModFile.write("            <span class=\"from-steam\">Steam</span>");
+        newModFile.write("          </td>");
+        newModFile.write("           <td>");
+        newModFile.write(modAorBBody.get(i) + "\n");
+        newModFile.write("          </td>");
+        newModFile.write("        </tr>");
+        return i;
     }
 }
